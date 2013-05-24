@@ -1,0 +1,61 @@
+description = "Implementation of a Fizz Buzz solution using the Evaluation Engine."
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+archivesBaseName = name.replace(' ', '-').toLowerCase()
+
+version = getVersionNumber()
+
+sourceCompatibility=1.7
+targetCompatibility=1.7
+
+//define repositories to use
+repositories {
+    if (!hasProperty("repositoryDirectory")) {
+        throw new InvalidUserDataException("repositoryDirectory missing from gradle.properties file.  Check sample.gradle.properties for usage")
+    }
+    flatDir name: 'repository', dirs: repositoryDirectory
+}
+
+uploadArchives {
+    repositories {
+	    if (!hasProperty("repositoryDirectory")) {
+	        throw new InvalidUserDataException("repositoryDirectory missing from gradle.properties file.  Check sample.gradle.properties for usage")
+	    }
+        flatDir {
+            dirs repositoryDirectory
+        }
+    }
+}
+
+String getVersionNumber() {
+    //build number should be set as BUILD_NUMBER environment variable by build system
+    def env = System.getenv()
+    def buildNumber = env.BUILD_NUMBER?.toInteger()
+
+    if( buildNumber == null){
+        return "1.0.0.0"
+    }else{
+        return "1.0.0." + buildNumber
+    }
+}
+
+sourceSets {
+    main {
+        java { srcDir 'src' }
+		resources { srcDir 'src' }
+    }
+}
+
+dependencies {
+    compile group: 'com.adamldoyle.evaluationengine', name: 'evaluation-engine', version: '1.0.0.+'
+}
+
+jar {
+	manifest { 
+        def manifestClasspath = configurations.runtime.collect { it.getName() }.join(',') 
+        attributes 'Class-Path': manifestClasspath
+        attributes 'Main-Class': 'com.adamldoyle.fizzbuzz.Main' 
+    }
+}
